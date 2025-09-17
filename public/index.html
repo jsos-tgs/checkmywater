@@ -33,7 +33,17 @@
     <span id="status"></span>
   </div>
 
-  <div id="map"></div>
+<div id="map"></div>
+
+<div id="legend">
+  <strong>Légende</strong><br>
+  <span class="dot safe"></span> Conforme (&lt; 0.05 µg/L)<br>
+  <span class="dot warn"></span> À surveiller (0.05–0.1 µg/L)<br>
+  <span class="dot risk"></span> Dépassement (&gt; 0.1 µg/L)<br>
+  <span class="dot na"></span> Non mesuré<br>
+  <br>
+  <em>Les chiffres indiquent le nombre de communes regroupées</em>
+</div>
 
   <!-- Leaflet + MarkerCluster JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
