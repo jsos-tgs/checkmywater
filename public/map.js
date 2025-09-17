@@ -6,11 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const etaEl = document.getElementById("eta");
   const resultsSection = document.getElementById("results");
   const tableBody = document.querySelector("#communesTable tbody");
-  const mapContainer = document.getElementById("mapContainer");
-  const mapTitle = document.getElementById("mapTitle");
-
-  let map = null;
-  let currentCity = null;
 
   const seuil = 0.10;
   const PFAS_REGEX = /(pfas|perfluoro|polyfluoro|fluoroalkyl)/i;
@@ -18,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const GEO_DEPTS = `https://geo.api.gouv.fr/departements?fields=code,nom&format=json`;
   const GEO_COMMUNES = (dep) =>
     `https://geo.api.gouv.fr/departements/${dep}/communes?fields=code,nom,centre&format=json&geometry=centre`;
-
   const HUBEAU_DEP = (dept) =>
     `https://hubeau.eaufrance.fr/api/v1/qualite_eau_potable/resultats_dis` +
     `?code_departement=${dept}&size=10000&fields=code_commune,libelle_parametre,parametre,resultat,resultat_numerique,unite,unite_resultat,date_prelevement`;
@@ -28,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return res.json();
   }
 
-  // Retourne la valeur max PFAS pour une commune
   function aggregateByCommune(rows){
     const communesMap = {};
     for(const r of rows){
@@ -50,37 +43,43 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loadCommunes(){
+    // Vérifier cache
+    const cache = localStorage.getItem("pfasData");
+    if(cache){
+      const parsed = JSON.parse(cache);
+      const today = new Date().toISOString().slice(0,10);
+      if(parsed.date === today){
+        console.log("✅ Chargement depuis le cache");
+        displayCommunes(parsed.data);
+        return;
+      }
+    }
+
+    // Sinon -> API
     const depts = await getJSON(GEO_DEPTS);
     let depDone = 0;
     const start = Date.now();
-    let matches = 0;
+    let matches = [];
 
     for(const dep of depts){
-      // Récupérer d’un coup toutes les communes du département
       const communesGeo = await getJSON(GEO_COMMUNES(dep.code));
       const geoMap = {};
-      communesGeo.forEach(c => {
-        if(c.code) geoMap[c.code] = c;
-      });
+      communesGeo.forEach(c => { if(c.code) geoMap[c.code] = c; });
 
-      // Récupérer les analyses PFAS pour ce département
       const data = await getJSON(HUBEAU_DEP(dep.code));
       const rows = data?.data || [];
       const byCommune = aggregateByCommune(rows);
 
       for(const [code, agg] of Object.entries(byCommune)){
         if(agg.value > seuil && geoMap[code]){
-          matches++;
-          const c = geoMap[code];
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${c.nom}</td>
-            <td>${dep.code}</td>
-            <td>${agg.value.toFixed(3)}</td>
-            <td>${agg.date || "-"}</td>
-          `;
-          row.addEventListener("click", ()=> toggleMap(c, agg));
-          tableBody.appendChild(row);
+          matches.push({
+            nom: geoMap[code].nom,
+            dep: dep.code,
+            lat: geoMap[code].centre.coordinates[1],
+            lon: geoMap[code].centre.coordinates[0],
+            value: agg.value,
+            date: agg.date
+          });
         }
       }
 
@@ -95,32 +94,72 @@ document.addEventListener("DOMContentLoaded", () => {
       etaEl.textContent = `Temps estimé restant : ~${Math.ceil(remaining)} sec`;
     }
 
-    statusEl.textContent = `✅ Terminé — ${matches} communes dépassent le seuil`;
-    etaEl.textContent = "";
-    resultsSection.style.display = "block";
+    // Cache pour la journée
+    localStorage.setItem("pfasData", JSON.stringify({
+      date: new Date().toISOString().slice(0,10),
+      data: matches
+    }));
+
+    displayCommunes(matches);
   }
 
-  function toggleMap(c, agg){
-    if(currentCity && currentCity.code === c.code){
-      mapContainer.style.display = "none";
-      if(map){ map.remove(); map = null; }
-      currentCity = null;
+  function displayCommunes(matches){
+    etaEl.textContent = "";
+    statusEl.textContent = `✅ Terminé — ${matches.length} communes dépassent le seuil`;
+    resultsSection.style.display = "block";
+
+    matches.forEach(c => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${c.nom}</td>
+        <td>${c.dep}</td>
+        <td>${c.value.toFixed(3)}</td>
+        <td>${c.date || "-"}</td>
+      `;
+      row.addEventListener("click", ()=> toggleMap(row, c));
+      tableBody.appendChild(row);
+    });
+  }
+
+  function toggleMap(row, c){
+    // Vérifier si une carte existe déjà sous cette ligne
+    const existing = row.nextElementSibling;
+    if(existing && existing.classList.contains("mapRow")){
+      existing.remove();
       return;
     }
 
-    currentCity = c;
-    mapTitle.textContent = `Localisation : ${c.nom} (PFAS ${agg.value.toFixed(3)} µg/L)`;
-    mapContainer.style.display = "block";
+    // Supprimer toute autre carte ouverte
+    document.querySelectorAll(".mapRow").forEach(el => el.remove());
 
-    if(map){ map.remove(); }
-    map = L.map("map").setView([c.centre.coordinates[1], c.centre.coordinates[0]], 13);
+    // Créer ligne contenant la carte
+    const mapRow = document.createElement("tr");
+    mapRow.classList.add("mapRow");
+    const td = document.createElement("td");
+    td.colSpan = 4;
+    td.innerHTML = `
+      <div style="position:relative; height:400px;">
+        <button class="closeMapBtn">Fermer la carte ✖</button>
+        <div class="miniMap" style="height:100%;"></div>
+      </div>
+    `;
+    mapRow.appendChild(td);
+    row.insertAdjacentElement("afterend", mapRow);
 
+    const mapDiv = td.querySelector(".miniMap");
+    const closeBtn = td.querySelector(".closeMapBtn");
+
+    // Init carte
+    const map = L.map(mapDiv).setView([c.lat, c.lon], 13);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors"
     }).addTo(map);
 
-    L.marker([c.centre.coordinates[1], c.centre.coordinates[0]]).addTo(map)
-      .bindPopup(`<strong>${c.nom}</strong><br/>PFAS : ${agg.value.toFixed(3)} µg/L`).openPopup();
+    L.marker([c.lat, c.lon]).addTo(map)
+      .bindPopup(`<strong>${c.nom}</strong><br/>PFAS : ${c.value.toFixed(3)} µg/L`).openPopup();
+
+    // Bouton fermer
+    closeBtn.addEventListener("click", ()=> mapRow.remove());
   }
 
   // Lancement
