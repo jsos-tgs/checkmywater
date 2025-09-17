@@ -7,55 +7,71 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <h1>💧 PFAS en France</h1>
+  <!-- Vidéo de fond -->
+  <video autoplay muted loop id="bg-video">
+    <source src="/video/eau.mp4" type="video/mp4">
+    Votre navigateur ne supporte pas la vidéo.
+  </video>
 
-  <section id="intro">
-    <p><strong>Qu’est-ce que le PFAS ?</strong><br>
-    Les PFAS (substances per- et polyfluoroalkylées) sont des composés chimiques persistants dans l’environnement et l’organisme. 
-    Ils sont surnommés <em>“polluants éternels”</em>.</p>
+  <!-- Overlay sombre pour lisibilité -->
+  <div id="overlay"></div>
 
-    <p><strong>Dangers pour la santé :</strong><br>
-    - Augmentation du risque de cancers<br>
-    - Perturbations hormonales<br>
-    - Effets sur le foie, les reins et le système immunitaire<br>
-    - Risques pour le développement chez l’enfant</p>
+  <!-- Contenu principal -->
+  <main>
+    <h1>💧 PFAS en France</h1>
 
-    <p><strong>Seuil acceptable :</strong><br>
-    L’Union européenne fixe à <strong>0,10 µg/L</strong> la limite maximale dans l’eau potable à partir de janvier 2026.</p>
+    <!-- Intro pédagogique -->
+    <section id="intro">
+      <p><strong>Qu’est-ce que le PFAS ?</strong><br>
+        Les PFAS (substances per- et polyfluoroalkylées) sont des composés chimiques persistants dans l’environnement et l’organisme. 
+        Ils sont surnommés <em>“polluants éternels”</em>.
+      </p>
 
-    <button id="loadBtn" class="btn">Charger les villes dépassant le seuil</button>
+      <p><strong>Dangers pour la santé :</strong><br>
+        - Augmentation du risque de cancers<br>
+        - Perturbations hormonales<br>
+        - Effets sur le foie, les reins et le système immunitaire<br>
+        - Risques pour le développement chez l’enfant
+      </p>
 
-    <div id="progressBox" style="display:none; max-width:500px; margin:20px auto;">
-      <div id="status" style="font-size:14px; margin-bottom:6px;"></div>
-      <div style="background:#eee; border-radius:6px; height:12px; overflow:hidden;">
-        <div id="progressBar" style="height:100%; width:0%; background:#1677ff; transition:width .3s;"></div>
+      <p><strong>Seuil acceptable :</strong><br>
+        L’Union européenne fixe à <strong>0,10 µg/L</strong> la limite maximale dans l’eau potable à partir de janvier 2026.
+      </p>
+
+      <button id="loadBtn" class="btn">Charger les villes dépassant le seuil</button>
+
+      <!-- Progression -->
+      <div id="progressBox" style="display:none;">
+        <div id="status"></div>
+        <div style="background:#eee; border-radius:6px; height:12px; overflow:hidden;">
+          <div id="progressBar" style="height:100%; width:0%; background:#1677ff;"></div>
+        </div>
+        <div id="eta"></div>
       </div>
-      <div id="eta" style="margin-top:6px; font-size:13px; color:#555;"></div>
-    </div>
-  </section>
+    </section>
 
-  <section id="results" style="display:none;">
-    <h2>Communes dépassant le seuil de 0,10 µg/L</h2>
-    <table id="communesTable">
-      <thead>
-        <tr>
-          <th>Commune</th>
-          <th>Département</th>
-          <th>Valeur (µg/L)</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <!-- Résultats -->
+    <section id="results" style="display:none;">
+      <h2>Communes dépassant le seuil de 0,10 µg/L</h2>
+      <table id="communesTable">
+        <thead>
+          <tr>
+            <th>Commune</th>
+            <th>Département</th>
+            <th>Valeur (µg/L)</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
 
-    <div id="mapContainer" style="display:none;">
-      <h2 id="mapTitle"></h2>
-      <div id="map"></div>
-    </div>
-  </section>
-
+  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- Script -->
   <script src="/map.js"></script>
 </body>
 </html>
