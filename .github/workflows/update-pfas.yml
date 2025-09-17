@@ -1,0 +1,36 @@
+name: Update PFAS dataset
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # tous les jours à 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  build-pfas:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build PFAS JSON
+        run: npm run build:pfas
+
+      - name: Commit & push if changed
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add public/pfas.json
+            git commit -m "chore: update pfas.json (auto)"
+            git push
+          else
+            echo "No changes to commit."
+          fi
