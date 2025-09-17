@@ -1,1 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CheckMyWater</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1 id="title"></h1>
+      <select id="langSelector">
+        <option value="fr">FR</option>
+        <option value="en">EN</option>
+      </select>
+    </header>
+
+    <main>
+      <label id="postalLabel" for="postalInput"></label>
+      <input type="text" id="postalInput" placeholder="75020"/>
+      <button id="checkBtn"></button>
+
+      <div id="result"></div>
+    </main>
+
+    <footer>
+      <p id="footer"></p>
+    </footer>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
 
