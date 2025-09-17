@@ -63,27 +63,3 @@ html, body {
 .badge.warn { background: #f9a825; color: #000; }
 .badge.risk { background: #c62828; }
 .badg
-#legend {
-  position: absolute;
-  bottom: 15px;
-  right: 15px;
-  background: rgba(255,255,255,0.9);
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  line-height: 1.5;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-#legend .dot {
-  display:inline-block;
-  width:14px;
-  height:14px;
-  border-radius:50%;
-  margin-right:6px;
-  vertical-align:middle;
-}
-#legend .safe { background:#2e7d32; }
-#legend .warn { background:#f9a825; }
-#legend .risk { background:#c62828; }
-#legend .na   { background:#9e9e9e; }
-
