@@ -10,21 +10,12 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
 
-  <!-- Ton style -->
   <link rel="stylesheet" href="/styles.css" />
-
   <style>
-    /* Mini style intégré (au besoin) */
-    body { margin:0; font-family:sans-serif; }
-    #toolbar {
-      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-      padding:10px; border-bottom:1px solid #eee;
-    }
-    #dept { padding:6px 10px; border:1px solid #ddd; border-radius:6px; }
-    #loadDept {
-      padding:7px 14px; border:none; border-radius:6px;
-      background:#1677ff; color:#fff; cursor:pointer;
-    }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    #toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:10px; border-bottom:1px solid #eee; }
+    #dept { padding:6px 10px; border:1px solid #ddd; border-radius:6px; min-width:260px; }
+    #loadDept { padding:7px 14px; border:none; border-radius:6px; background:#1677ff; color:#fff; cursor:pointer; }
     #loadDept:disabled { opacity:.6; cursor:default; }
     #status { font-size:13px; opacity:.8; }
     #map { height:calc(100vh - 60px); width:100%; }
@@ -36,17 +27,7 @@
   <div id="toolbar">
     <strong>💧 CheckMyWater – PFAS</strong>
     <select id="dept">
-      <option value="">Choisir un département…</option>
-      <option value="75">75 — Paris</option>
-      <option value="69">69 — Rhône</option>
-      <option value="13">13 — Bouches-du-Rhône</option>
-      <option value="59">59 — Nord</option>
-      <option value="33">33 — Gironde</option>
-      <option value="31">31 — Haute-Garonne</option>
-      <option value="34">34 — Hérault</option>
-      <option value="44">44 — Loire-Atlantique</option>
-      <option value="83">83 — Var</option>
-      <option value="92">92 — Hauts-de-Seine</option>
+      <option value="">Chargement des départements…</option>
     </select>
     <button id="loadDept" disabled>Charger le département</button>
     <span id="status"></span>
