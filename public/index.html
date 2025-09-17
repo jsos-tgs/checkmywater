@@ -8,7 +8,7 @@
 </head>
 <body>
   <!-- Vidéo de fond -->
-  <video autoplay muted loop id="bg-video">
+  <video autoplay muted loop playsinline id="bg-video">
     <source src="/video/eau.mp4" type="video/mp4">
     Votre navigateur ne supporte pas la vidéo.
   </video>
@@ -53,17 +53,19 @@
     <!-- Résultats -->
     <section id="results" style="display:none;">
       <h2>Communes dépassant le seuil de 0,10 µg/L</h2>
-      <table id="communesTable">
-        <thead>
-          <tr>
-            <th>Commune</th>
-            <th>Département</th>
-            <th>Valeur (µg/L)</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="table-container">
+        <table id="communesTable">
+          <thead>
+            <tr>
+              <th>Commune</th>
+              <th>Département</th>
+              <th>Valeur (µg/L)</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </section>
   </main>
 
