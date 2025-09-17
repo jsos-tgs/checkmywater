@@ -1,42 +1,35 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CheckMyWater</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Carte – Qualité de l’eau (PFAS)</title>
+
+  <!-- Leaflet + MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
+
   <link rel="stylesheet" href="/styles.css" />
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
-  <div id="app">
-    <header>
-      <h1 id="title">Mon Eau 2026</h1>
-      <select id="langSelector">
-        <option value="fr">FR</option>
-        <option value="en">EN</option>
-      </select>
-    </header>
-
-    <main>
-      <label id="postalLabel" for="postalInput">Entrez votre code postal :</label>
-      <input type="text" id="postalInput" placeholder="75020"/>
-      <button id="checkBtn">Vérifier</button>
-      <button id="mapBtn">Voir la carte</button>
-
-      <div id="result"></div>
-      <div id="map"></div>
-    </main>
-
-    <footer>
-      <p id="footer">Données issues de Hub’Eau - Version démo</p>
-    </footer>
+  <div id="topbar">
+    <h1>Qualité de l’eau du robinet (PFAS)</h1>
+    <div class="legend">
+      <span><i class="dot dot-green"></i> ≤ 0.05 µg/L</span>
+      <span><i class="dot dot-amber"></i> 0.05–0.1 µg/L</span>
+      <span><i class="dot dot-red"></i> &gt; 0.1 µg/L</span>
+      <span><i class="dot dot-grey"></i> N/A</span>
+    </div>
+    <input id="search" type="text" placeholder="Rechercher une commune…" />
   </div>
 
-  <!-- Scripts -->
-  <script src="/verbal.js"></script>
-  <script src="/script.js"></script>
+  <div id="map"></div>
+
+  <!-- Leaflet + MarkerCluster JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
   <script src="/map.js"></script>
 </body>
 </html>
