@@ -1,4 +1,4 @@
-/* Fond vidéo plein écran */
+/* === Fond vidéo === */
 #bg-video {
   position: fixed;
   top: 0; left: 0;
@@ -16,7 +16,7 @@
   z-index: -1;
 }
 
-/* Texte global */
+/* === Texte global === */
 body {
   font-family: system-ui, sans-serif;
   margin: 0;
@@ -24,7 +24,6 @@ body {
   text-shadow: 0 0 8px rgba(255,255,255,0.8);
 }
 
-/* Conteneur principal */
 main {
   padding: 20px;
   max-width: 1000px;
@@ -33,63 +32,82 @@ main {
   border-radius: 12px;
 }
 
-/* Titres */
 h1, h2 {
   text-align: center;
   margin: 20px 0;
   font-weight: bold;
 }
 
-/* Bouton */
+/* === Bouton transparent avec bords bleus === */
 .btn {
   display: block;
   margin: 20px auto;
   padding: 12px 18px;
-  background: #1677ff;
-  border: none;
-  color: white;
+  background: transparent;
+  border: 2px solid #1677ff;
+  color: #1677ff;
   font-size: 16px;
   border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 0 12px rgba(255,255,255,0.6);
+  font-weight: bold;
+  transition: all 0.3s ease;
 }
-.btn:disabled { opacity: 0.6; cursor: default; }
+.btn:hover:not(:disabled) {
+  background: #1677ff;
+  color: white;
+  box-shadow: 0 0 12px rgba(22,119,255,0.6);
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
 
-/* Progression */
+/* === Progression === */
 #progressBox {
   max-width: 500px;
   margin: 20px auto;
   color: #fff;
 }
 
-/* Tableau */
+#status, #eta {
+  font-size: 14px;
+  margin: 6px 0;
+}
+
+/* === Tableau === */
 table {
   width: 100%;
   border-collapse: collapse;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
   backdrop-filter: blur(4px);
   border-radius: 8px;
   overflow: hidden;
-}
-
-th, td {
-  padding: 12px 15px;
-  border-bottom: 1px solid rgba(255,255,255,0.3);
-  text-align: left;
-  color: #fff;
+  margin: 20px auto;
+  max-width: 900px;
 }
 
 th {
-  background: rgba(22,119,255,0.9);
-  font-weight: 600;
+  padding: 12px 15px;
+  border-bottom: 2px solid #1677ff;
+  text-align: left;
+  color: #1677ff;
+  background: transparent;
+  font-weight: bold;
+}
+
+td {
+  padding: 12px 15px;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  text-align: left;
+  color: white;
 }
 
 tr:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.15);
   cursor: pointer;
 }
 
-/* Carte */
+/* === Carte mini === */
 .miniMap {
   border-radius: 8px;
   overflow: hidden;
@@ -97,10 +115,15 @@ tr:hover {
 .closeMapBtn {
   position: absolute;
   top: 10px; right: 10px;
-  background: rgba(255,0,0,0.8);
+  background: rgba(22,119,255,0.9);
   color: white;
   border: none;
   padding: 6px 10px;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+.closeMapBtn:hover {
+  background: rgba(255,0,0,0.8);
 }
