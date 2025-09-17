@@ -2,6 +2,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const tableBody = document.querySelector("#communesTable tbody");
   const mapContainer = document.getElementById("mapContainer");
   const mapTitle = document.getElementById("mapTitle");
+  let map = null;
+  let currentCity = null;
 
   const seuil = 0.10;
   const PFAS_REGEX = /(pfas|perfluoro|polyfluoro|fluoroalkyl)/i;
@@ -46,18 +48,29 @@ document.addEventListener("DOMContentLoaded", () => {
             <td>${agg.value.toFixed(3)}</td>
             <td>${agg.date || "-"}</td>
           `;
-          row.addEventListener("click", ()=> showMap(c, agg));
+          row.addEventListener("click", ()=> toggleMap(c, agg));
           tableBody.appendChild(row);
         }
       }
     }
   }
 
-  function showMap(c, agg){
+  function toggleMap(c, agg){
+    // Si on reclique sur la même ville -> fermer la carte
+    if(currentCity && currentCity.nom === c.nom){
+      mapContainer.style.display = "none";
+      if(map){ map.remove(); map = null; }
+      currentCity = null;
+      return;
+    }
+
+    currentCity = c;
     mapTitle.textContent = `Localisation : ${c.nom} (PFAS ${agg.value.toFixed(3)} µg/L)`;
     mapContainer.style.display = "block";
 
-    const map = L.map("map").setView([c.centre.coordinates[1], c.centre.coordinates[0]], 13);
+    if(map){ map.remove(); } // reset si carte déjà ouverte
+
+    map = L.map("map").setView([c.centre.coordinates[1], c.centre.coordinates[0]], 13);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors"
     }).addTo(map);
