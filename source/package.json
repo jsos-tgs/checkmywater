@@ -1,1 +1,13 @@
+{
+  "name": "checkmywater",
+  "version": "1.0.0",
+  "description": "CheckMyWater - Mon Eau 2026 app demo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
 
