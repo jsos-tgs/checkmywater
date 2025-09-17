@@ -36,16 +36,17 @@ h1, h2 {
   text-align: center;
   margin: 20px 0;
   font-weight: bold;
+  color: #fff;
 }
 
-/* === Bouton transparent avec bords bleus === */
+/* === Bouton transparent avec texte blanc et bords bleus === */
 .btn {
   display: block;
   margin: 20px auto;
   padding: 12px 18px;
   background: transparent;
   border: 2px solid #1677ff;
-  color: #1677ff;
+  color: #fff; /* ✅ texte blanc */
   font-size: 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -54,7 +55,7 @@ h1, h2 {
 }
 .btn:hover:not(:disabled) {
   background: #1677ff;
-  color: white;
+  color: white; /* reste blanc au survol */
   box-shadow: 0 0 12px rgba(22,119,255,0.6);
 }
 .btn:disabled {
@@ -90,7 +91,7 @@ th {
   padding: 12px 15px;
   border-bottom: 2px solid #1677ff;
   text-align: left;
-  color: #1677ff;
+  color: #fff; /* ✅ texte blanc */
   background: transparent;
   font-weight: bold;
 }
