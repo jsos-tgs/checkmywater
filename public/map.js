@@ -2,44 +2,74 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusEl = document.getElementById("status");
   const deptSelect = document.getElementById("dept");
   const btn = document.getElementById("loadDept");
+  const toggleLegendBtn = document.getElementById("toggleLegendBtn");
 
   const LIMIT_RED = 0.1;   // > 0.1 µg/L => non conforme 2026
   const LIMIT_AMB = 0.05;  // 0.05–0.1 µg/L => à surveiller
 
-  // ---- Leaflet init ----
-  let map = L.map("map", { preferCanvas: true }).setView([46.8, 2.5], 7);
+  // Leaflet map
+  const map = L.map("map", { preferCanvas: true }).setView([46.8, 2.5], 7);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap contributors"
   }).addTo(map);
-  let cluster = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 60 });
+  const cluster = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 60 });
   map.addLayer(cluster);
 
-  // ---- Utils HTTP ----
+  // Legend control (Leaflet)
+  let legendEl; // on garde la référence pour show/hide
+  const legend = L.control({ position: "bottomright" });
+  legend.onAdd = function () {
+    const div = L.DomUtil.create("div", "legend");
+    div.innerHTML = `
+      <strong>Légende</strong><br>
+      <span class="dot safe"></span> Conforme (&lt; 0.05 µg/L)<br>
+      <span class="dot warn"></span> À surveiller (0.05–0.1 µg/L)<br>
+      <span class="dot risk"></span> Dépassement (&gt; 0.1 µg/L)<br>
+      <span class="dot na"></span> Non mesuré<br>
+      <br><em>Les chiffres = communes regroupées</em>
+    `;
+    legendEl = div;
+    return div;
+  };
+  legend.addTo(map);
+
+  // Toggle legend (bouton “?”)
+  let legendVisible = true;
+  function setLegendVisible(show){
+    legendVisible = !!show;
+    if (!legendEl) return;
+    legendEl.style.display = legendVisible ? "block" : "none";
+    toggleLegendBtn.setAttribute("aria-pressed", legendVisible ? "true" : "false");
+  }
+  toggleLegendBtn.addEventListener("click", () => setLegendVisible(!legendVisible));
+  setLegendVisible(true); // visible par défaut
+
+  // Utils HTTP
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   async function getJSON(url, tries=4, timeout=30000) {
     for (let i=0;i<tries;i++) {
-      try {
+      try{
         const ctrl = new AbortController();
         const to = setTimeout(()=>ctrl.abort(), timeout);
-        const res = await fetch(url, { signal: ctrl.signal, headers: { "Accept":"application/json" }});
+        const res = await fetch(url, { signal: ctrl.signal, headers:{ "Accept":"application/json" }});
         clearTimeout(to);
         if (res.ok) return res.json();
         if (res.status === 429 || res.status >= 500) { await sleep(800*(i+1)); continue; }
         throw new Error(`HTTP ${res.status} ${url}`);
-      } catch(e) {
+      }catch(e){
         if (i === tries-1) throw e;
         await sleep(800*(i+1));
       }
     }
   }
 
-  // ---- APIs ----
+  // APIs
   const GEO_DEPTS = `https://geo.api.gouv.fr/departements?fields=code,nom&format=json`;
   const GEO_COMMUNES = (dept) => `https://geo.api.gouv.fr/departements/${dept}/communes?fields=code,nom,centre&format=json&geometry=centre`;
   const HUBEAU_COMMUNE = (insee) => `https://hubeau.eaufrance.fr/api/v1/qualite_eau_potable/resultats_dis?code_commune=${encodeURIComponent(insee)}&size=300&format=json`;
   const PFAS_REGEX = /(pfas|perfluoro|polyfluoro|fluoroalkyl|perfluoro(carboxyl|sulfon))/i;
 
-  // ---- UI helpers ----
+  // UI helpers
   function colorFor(v) {
     if (v == null || Number.isNaN(v)) return "grey";
     if (v > LIMIT_RED) return "red";
@@ -64,22 +94,20 @@ document.addEventListener("DOMContentLoaded", () => {
     return '<span class="badge na">Non mesuré</span>';
   }
 
-  // tri des codes pour gérer 2A/2B correctement
+  // tri des codes département (gère 2A/2B)
   const codeOrder = (code) => {
     if (code === "2A") return 20.1;
     if (code === "2B") return 20.2;
     const n = parseInt(code, 10);
-    return Number.isNaN(n) ? 999 : n; // 971..976 > métropole
+    return Number.isNaN(n) ? 999 : n;
   };
 
-  // ---- Remplit TOUS les départements automatiquement ----
+  // Remplir la liste des départements (tous)
   (async function populateDepartments(){
     try {
       statusEl.textContent = "Chargement des départements…";
       const list = await getJSON(GEO_DEPTS);
-      // tri par code (01..19, 2A, 2B, 21..95, 971..976)
       list.sort((a,b) => codeOrder(a.code) - codeOrder(b.code) || a.code.localeCompare(b.code));
-      // remplit le select
       deptSelect.innerHTML = `<option value="">Choisir un département…</option>` +
         list.map(d => `<option value="${d.code}">${d.code} — ${d.nom}</option>`).join("");
       btn.disabled = !deptSelect.value;
@@ -91,15 +119,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   })();
 
-  // ---- Récup PFAS pour une commune (valeur la plus récente) ----
-  async function fetchPFASForCommune(insee) {
+  // PFAS pour une commune (la plus récente)
+  async function fetchPFASForCommune(insee){
     const json = await getJSON(HUBEAU_COMMUNE(insee));
     const rows = json?.data || [];
     let best = null;
     for (const r of rows) {
       const label = r.libelle_parametre || r.parametre || "";
       if (!PFAS_REGEX.test(label)) continue;
-      const val = r.resultat !== undefined ? Number(r.resultat) : NaN;
+      const val = r.resultat!==undefined ? Number(r.resultat) : NaN;
       if (Number.isNaN(val)) continue;
       const date = r.date_prelevement || r.date_analyse || "";
       if (!best || (date && best.date && date > best.date) || (!best.date && date)) {
@@ -109,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return best; // null si rien trouvé
   }
 
-  // petite file d'attente
+  // File d'attente simple (concurrence limitée)
   async function mapWithConcurrency(items, limit, worker){
     const ret = new Array(items.length);
     let idx = 0;
@@ -124,14 +152,14 @@ document.addEventListener("DOMContentLoaded", () => {
     return ret;
   }
 
-  // ---- Chargement d’un département ----
+  // Charger un département
   async function loadDepartment(deptCode){
     if(!deptCode) return;
     btn.disabled = true;
     statusEl.textContent = "Chargement des communes…";
     cluster.clearLayers();
 
-    // 1) communes + recentrage
+    // 1) Communes + recentrage
     let communes = await getJSON(GEO_COMMUNES(deptCode));
     communes = (communes || [])
       .filter(c => c?.centre?.coordinates)
@@ -147,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
       map.fitBounds(bounds, { padding:[30,30] });
     }
 
-    // 2) PFAS pour chaque commune (concurrence limitée)
+    // 2) PFAS pour chaque commune
     let done = 0, withData = 0;
     statusEl.textContent = `Analyses PFAS… (0 / ${communes.length})`;
     const results = await mapWithConcurrency(communes, 6, async (c) => {
@@ -165,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // 3) affichage
+    // 3) Affichage
     for (const r of results) {
       if (!r) continue;
       const m = L.circleMarker([r.lat, r.lon], styleFor(r.pfas)).bindPopup(`
@@ -182,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.disabled = false;
   }
 
-  // ---- Wiring UI ----
+  // Wiring UI
   deptSelect.addEventListener("change", () => {
     btn.disabled = !deptSelect.value;
   });
