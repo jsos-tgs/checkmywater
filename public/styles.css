@@ -67,3 +67,5 @@ html, body{ height:100%; margin:0; font-family: system-ui, -apple-system, Segoe 
   #dept{ min-width: 180px; flex:1; }
   #status{ flex-basis: 100%; }
 }
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#method{ padding:8px 10px; border:1px solid #ddd; border-radius:8px; }
