@@ -1,17 +1,46 @@
+/* Fond vidéo plein écran */
+#bg-video {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+
+/* Overlay sombre pour lisibilité */
+#overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: -1;
+}
+
+/* Texte global */
 body {
   font-family: system-ui, sans-serif;
-  margin: 20px;
-  background: #f9fafc;
-  color: #222;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 0 8px rgba(255,255,255,0.8);
 }
 
+/* Conteneur principal */
+main {
+  padding: 20px;
+  max-width: 1000px;
+  margin: auto;
+  background: rgba(0,0,0,0.3);
+  border-radius: 12px;
+}
+
+/* Titres */
 h1, h2 {
   text-align: center;
-  margin-bottom: 20px;
+  margin: 20px 0;
+  font-weight: bold;
 }
 
-p { max-width: 700px; margin: 10px auto; line-height: 1.5; }
-
+/* Bouton */
 .btn {
   display: block;
   margin: 20px auto;
@@ -22,40 +51,56 @@ p { max-width: 700px; margin: 10px auto; line-height: 1.5; }
   font-size: 16px;
   border-radius: 8px;
   cursor: pointer;
+  box-shadow: 0 0 12px rgba(255,255,255,0.6);
 }
 .btn:disabled { opacity: 0.6; cursor: default; }
 
+/* Progression */
+#progressBox {
+  max-width: 500px;
+  margin: 20px auto;
+  color: #fff;
+}
+
+/* Tableau */
 table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  margin: 20px auto;
-  max-width: 900px;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(4px);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 th, td {
   padding: 12px 15px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
   text-align: left;
+  color: #fff;
 }
 
 th {
-  background: #1677ff;
-  color: white;
+  background: rgba(22,119,255,0.9);
   font-weight: 600;
 }
 
 tr:hover {
-  background: #f1f5ff;
+  background: rgba(255,255,255,0.2);
   cursor: pointer;
 }
 
-#map {
-  height: 500px;
-  width: 100%;
+/* Carte */
+.miniMap {
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  max-width: 900px;
-  margin: 20px auto;
+  overflow: hidden;
+}
+.closeMapBtn {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: rgba(255,0,0,0.8);
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
 }
