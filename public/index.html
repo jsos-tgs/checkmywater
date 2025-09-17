@@ -30,25 +30,30 @@
   </style>
 </head>
 <body>
-  <div id="toolbar">
-    <strong>💧 PFAS — France</strong>
+ <div id="toolbar">
+  <strong>💧 PFAS — France</strong>
 
-    <!-- seuil -->
-    <label for="threshold">Seuil (µg/L)</label>
-    <input id="threshold" type="number" step="0.01" min="0" value="0.10" />
+  <label for="threshold">Seuil (µg/L)</label>
+  <input id="threshold" type="number" step="0.01" min="0" value="0.10" />
 
-    <!-- filtre au-dessus/en dessous -->
-    <select id="filter">
-      <option value="below" selected>En dessous du seuil</option>
-      <option value="above">Au-dessus du seuil</option>
-    </select>
+  <select id="filter">
+    <option value="below" selected>En dessous du seuil</option>
+    <option value="above">Au-dessus du seuil</option>
+  </select>
 
-    <button id="loadFrance" class="btn">Charger la France</button>
-    <span id="status" role="status" aria-live="polite"></span>
+  <button id="loadFrance" class="btn">Charger la France</button>
 
-    <!-- Légende toggle -->
-    <button id="toggleLegendBtn" class="icon-btn" aria-label="Afficher / masquer la légende" aria-pressed="true">?</button>
+  <!-- Texte + barre -->
+  <div id="progressBox" style="flex:1; min-width:200px; max-width:400px;">
+    <div id="status" role="status" aria-live="polite" style="font-size:12px; margin-bottom:3px;"></div>
+    <div style="background:#eee; border-radius:6px; height:10px; overflow:hidden;">
+      <div id="progressBar" style="height:100%; width:0%; background:#1677ff; transition:width .3s;"></div>
+    </div>
   </div>
+
+  <button id="toggleLegendBtn" class="icon-btn" aria-label="Afficher / masquer la légende" aria-pressed="true">?</button>
+</div>
+
 
   <div id="map" role="application" aria-label="Carte nationale des PFAS"></div>
 
