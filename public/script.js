@@ -1,10 +1,8 @@
 let labels = {};
 let currentLang = "fr";
 
-async function loadLabels(lang) {
-  const res = await fetch("/verbal.json");
-  const data = await res.json();
-  labels = data[lang];
+function loadLabels(lang) {
+  labels = window.verbal[lang];
   updateTexts();
 }
 
@@ -40,4 +38,3 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   });
 });
-
