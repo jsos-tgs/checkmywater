@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CheckMyWater – France (PFAS élevés)</title>
+  <title>CheckMyWater – France (PFAS)</title>
 
   <!-- Leaflet + MarkerCluster CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
@@ -12,11 +12,12 @@
 
   <link rel="stylesheet" href="/styles.css" />
   <style>
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:#222; }
+    body { margin:0; font-family: system-ui, sans-serif; color:#222; }
     #toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:10px; border-bottom:1px solid #eee; background:#fff; z-index:1000; }
     .btn{ padding:9px 14px; border:none; border-radius:8px; background:#1677ff; color:#fff; cursor:pointer; }
     .btn:disabled{ opacity:.6; cursor:default; }
     #threshold{ width:110px; padding:8px 10px; border:1px solid #ddd; border-radius:8px; }
+    #filter{ padding:8px 10px; border:1px solid #ddd; border-radius:8px; }
     #status{ font-size:13px; opacity:.85; }
     #map{ height: calc(100vh - 60px); width:100%; }
     .icon-btn{ margin-left:auto; width:34px; height:34px; line-height:34px; text-align:center; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer; font-weight:700; }
@@ -30,17 +31,16 @@
 </head>
 <body>
   <div id="toolbar">
-    <strong>💧 PFAS élevés — France</strong>
+    <strong>💧 PFAS — France</strong>
 
-    <!-- seuil affichage PFAS -->
+    <!-- seuil -->
     <label for="threshold">Seuil (µg/L)</label>
     <input id="threshold" type="number" step="0.01" min="0" value="0.10" />
 
-    <!-- méthode d’évaluation -->
-    <select id="method" title="Méthode d’évaluation">
-      <option value="sum_first" selected>Somme PFAS si dispo → sinon max</option>
-      <option value="max_only">Max molécule PFAS</option>
-      <option value="strict">Strict : une molécule &gt; seuil</option>
+    <!-- filtre au-dessus/en dessous -->
+    <select id="filter">
+      <option value="below" selected>En dessous du seuil</option>
+      <option value="above">Au-dessus du seuil</option>
     </select>
 
     <button id="loadFrance" class="btn">Charger la France</button>
@@ -50,7 +50,7 @@
     <button id="toggleLegendBtn" class="icon-btn" aria-label="Afficher / masquer la légende" aria-pressed="true">?</button>
   </div>
 
-  <div id="map" role="application" aria-label="Carte nationale des PFAS élevés"></div>
+  <div id="map" role="application" aria-label="Carte nationale des PFAS"></div>
 
   <!-- Leaflet + MarkerCluster JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -58,6 +58,5 @@
 
   <!-- App -->
   <script src="/map.js" defer></script>
-  <script src="/script.js" defer></script>
 </body>
 </html>
