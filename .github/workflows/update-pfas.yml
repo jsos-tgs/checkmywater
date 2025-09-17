@@ -2,17 +2,17 @@ name: Update PFAS dataset
 
 on:
   schedule:
-    - cron: "0 3 * * *"   # tous les jours 03:00 UTC
+    - cron: "0 3 * * *"
   workflow_dispatch:
 
 permissions:
-  contents: write   # nécessaire pour pousser le commit
+  contents: write
 
 jobs:
   build-pfas:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -20,22 +20,29 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install deps (in source/)
+      - name: Install deps (source/)
         working-directory: source
         run: npm ci
 
-      - name: Build PFAS JSON (runs from source/)
+      # D'abord un run rapide (échantillon) pour vérifier que tout marche
+      - name: Build PFAS (sample run)
         working-directory: source
-        run: npm run build:pfas
+        run: SAMPLE_MODE=1 CONCURRENCY=6 npm run build:pfas
 
-      - name: Show result
+      - name: Show file
         run: ls -lh public | cat
 
-      - name: Upload pfas.json as artifact (debug)
+      - name: Upload artifact (sample)
         uses: actions/upload-artifact@v4
         with:
-          name: pfas.json
+          name: pfas-sample.json
           path: public/pfas.json
+
+      # Puis le run complet (tu peux le laisser commenté le temps de valider)
+      - name: Build PFAS (full run)
+        if: ${{ github.event_name == 'schedule' }}
+        working-directory: source
+        run: SAMPLE_MODE=0 CONCURRENCY=3 npm run build:pfas
 
       - name: Commit & push if changed
         run: |
