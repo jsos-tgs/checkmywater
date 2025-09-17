@@ -1,15 +1,24 @@
-name: Update PFAS dataset
+name: Build PFAS dataset
 
 on:
-  schedule:
-    - cron: "0 3 * * *"
   workflow_dispatch:
+    inputs:
+      sample:
+        description: "Run rapide d'échantillon (oui = 1 / non = 0)"
+        required: true
+        default: "1"
+      concurrency:
+        description: "Nb de requêtes parallèles"
+        required: true
+        default: "6"
+  schedule:
+    - cron: "0 3 * * *" # tous les jours à 03:00 UTC
 
 permissions:
   contents: write
 
 jobs:
-  build-pfas:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,33 +29,30 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install deps (source/)
+      # Si ton package.json est dans /source
+      - name: Install deps
         working-directory: source
         run: npm ci
 
-      # D'abord un run rapide (échantillon) pour vérifier que tout marche
-      - name: Build PFAS (sample run)
+      - name: Build PFAS JSON
         working-directory: source
-        run: SAMPLE_MODE=1 CONCURRENCY=6 npm run build:pfas
+        env:
+          SAMPLE: ${{ github.event.inputs.sample || '0' }}
+          CONCURRENCY: ${{ github.event.inputs.concurrency || '3' }}
+        run: npm run build:pfas
 
-      - name: Show file
+      - name: Show result
         run: ls -lh public | cat
 
-      - name: Upload artifact (sample)
+      - name: Upload artifact (debug)
         uses: actions/upload-artifact@v4
         with:
-          name: pfas-sample.json
+          name: pfas.json
           path: public/pfas.json
-
-      # Puis le run complet (tu peux le laisser commenté le temps de valider)
-      - name: Build PFAS (full run)
-        if: ${{ github.event_name == 'schedule' }}
-        working-directory: source
-        run: SAMPLE_MODE=0 CONCURRENCY=3 npm run build:pfas
 
       - name: Commit & push if changed
         run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
+          if [[ -n "$(git status --porcelain public/pfas.json)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add public/pfas.json
