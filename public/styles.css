@@ -87,6 +87,7 @@ button {
   color: #fff;
   cursor: pointer;
   transition: transform 0.2s, background 0.3s;
+  margin: 5px;
 }
 
 button:hover {
@@ -117,6 +118,16 @@ button:hover {
 .safe {
   color: #388e3c;
   font-weight: bold;
+}
+
+/* Carte */
+#map {
+  display: none; /* cachée par défaut */
+  height: 400px;
+  width: 100%;
+  margin-top: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 /* Footer */
