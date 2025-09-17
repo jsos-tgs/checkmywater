@@ -2,8 +2,11 @@ name: Update PFAS dataset
 
 on:
   schedule:
-    - cron: "0 3 * * *" # tous les jours à 03:00 UTC
+    - cron: "0 3 * * *"   # tous les jours 03:00 UTC
   workflow_dispatch:
+
+permissions:
+  contents: write   # nécessaire pour pousser le commit
 
 jobs:
   build-pfas:
@@ -17,11 +20,22 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install deps
+      - name: Install deps (in source/)
+        working-directory: source
         run: npm ci
 
-      - name: Build PFAS JSON
+      - name: Build PFAS JSON (runs from source/)
+        working-directory: source
         run: npm run build:pfas
+
+      - name: Show result
+        run: ls -lh public | cat
+
+      - name: Upload pfas.json as artifact (debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: pfas.json
+          path: public/pfas.json
 
       - name: Commit & push if changed
         run: |
