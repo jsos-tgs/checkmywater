@@ -5,11 +5,10 @@
     { "src": "index.html", "use": "@vercel/static" },
     { "src": "styles.css", "use": "@vercel/static" },
     { "src": "script.js", "use": "@vercel/static" },
-    { "src": "verbal.json", "use": "@vercel/static" }
+    { "src": "verbal.js", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/check/(.*)", "dest": "/server.js" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
-
