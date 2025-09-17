@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const statusEl = document.getElementById("status");
+  const progressBar = document.getElementById("progressBar");
   const btnFrance = document.getElementById("loadFrance");
   const thresholdInput = document.getElementById("threshold");
   const filterSelect = document.getElementById("filter");
@@ -44,23 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setLegendVisible(true);
 
   // HTTP
-  const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
-  async function getJSON(url, tries=4, timeout=20000){
-    for(let i=0;i<tries;i++){
-      try{
-        const ctrl = new AbortController();
-        const to = setTimeout(()=>ctrl.abort(), timeout);
-        const res = await fetch(url,{signal:ctrl.signal,headers:{Accept:"application/json"}});
-        clearTimeout(to);
-        if(res.ok) return res.json();
-        if(res.status===429 || res.status>=500){ await sleep(500*(i+1)); continue; }
-        throw new Error(`HTTP ${res.status} ${url}`);
-      }catch(e){
-        if(i===tries-1) throw e;
-        await sleep(500*(i+1));
-      }
-    }
-  }
+  async function getJSON(url){ const res = await fetch(url); return res.json(); }
 
   // APIs
   const GEO_DEPTS = `https://geo.api.gouv.fr/departements?fields=code,nom&format=json`;
@@ -73,18 +58,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const PFAS_REGEX = /(pfas|perfluoro|polyfluoro|fluoroalkyl|perfluoro(carboxyl|sulfon))/i;
 
-  // Cache local
-  const cacheKey = (insee)=> `pfas:${insee}`;
-  const readCache = (k)=> {
-    try{ const raw = localStorage.getItem(k); if(!raw) return null;
-      const obj = JSON.parse(raw); if(Date.now()-obj.ts > CACHE_TTL_MS) return null; return obj.data;
-    }catch{return null;}
-  };
-  const writeCache = (k, data)=> { try{ localStorage.setItem(k, JSON.stringify({ts:Date.now(), data})); }catch{} };
-
   // Agrégation simple : max PFAS trouvé
   function aggregatePFAS(rows){
-    if (!rows || !rows.length) return null;
     const vals = rows.map(r=>{
       if (!PFAS_REGEX.test(r.libelle_parametre||r.parametre||"")) return null;
       const v = r.resultat!=null ? Number(r.resultat) : (r.resultat_numerique!=null ? Number(r.resultat_numerique) : NaN);
@@ -96,15 +71,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function fetchAgg(insee){
-    const k = cacheKey(insee);
-    const c = readCache(k);
-    if (c) return c;
     const json = await getJSON(HUBEAU_COMMUNE(insee));
     const rows = json?.data || [];
-    const agg = aggregatePFAS(rows);
-    const out = { agg };
-    writeCache(k, out);
-    return out;
+    return { agg: aggregatePFAS(rows) };
   }
 
   async function eachWithConcurrency(items, limit, worker){
@@ -118,48 +87,51 @@ document.addEventListener("DOMContentLoaded", () => {
     await Promise.all(runners);
   }
 
-  // Charger toute la France
+  // Charger France
   btnFrance.addEventListener("click", async () => {
     const seuil = parseFloat(thresholdInput.value) || 0.1;
-    const filter = filterSelect.value; // "above" ou "below"
+    const filter = filterSelect.value;
 
     btnFrance.disabled = true;
     cluster.clearLayers();
-    statusEl.textContent = "Chargement des départements…";
 
     const depts = await getJSON(GEO_DEPTS);
     let depDone=0, comScanned=0, matches=0;
+    let totalCommunes = 0;
+
+    // Calculer total pour la progression
+    for(const dep of depts){
+      const communes = await getJSON(GEO_COMMUNES(dep.code)) || [];
+      totalCommunes += communes.length;
+    }
 
     await eachWithConcurrency(depts, CONCURRENCY_DEPTS, async (dep)=>{
       const communes = await getJSON(GEO_COMMUNES(dep.code)) || [];
-      const list = communes.filter(c=>c?.centre?.coordinates).map(c=>({
-        insee:c.code, name:c.nom, lat:c.centre.coordinates[1], lon:c.centre.coordinates[0]
-      }));
-
-      await eachWithConcurrency(list, CONCURRENCY_COMMUNES, async (c)=>{
-        const { agg } = await fetchAgg(c.insee);
+      await eachWithConcurrency(communes, CONCURRENCY_COMMUNES, async (c)=>{
+        if(!c?.centre?.coordinates) return;
+        const { agg } = await fetchAgg(c.code);
         comScanned++;
         const val = agg?.value ?? null;
         if (val!=null){
           const condition = filter==="above" ? (val > seuil) : (val <= seuil);
           if (condition){
             matches++;
-            const m = L.circleMarker([c.lat,c.lon], styleFor(val,seuil)).bindPopup(`
-              <strong>${c.name}</strong><br/>
-              Valeur PFAS : ${val.toFixed(3)} µg/L ${agg.unit||""}${agg.date?` — <small>${agg.date}</small>`:""}<br/>
-              ${agg.label?`<small>Paramètre : ${agg.label}</small><br/>`:""}
+            const m = L.circleMarker([c.centre.coordinates[1],c.centre.coordinates[0]], styleFor(val,seuil)).bindPopup(`
+              <strong>${c.nom}</strong><br/>
+              Valeur PFAS : ${val.toFixed(3)} µg/L
             `);
             cluster.addLayer(m);
           }
         }
-        if (comScanned % 200 === 0){
-          statusEl.textContent = `Dépts: ${depDone}/${depts.length} — Communes: ${comScanned} — Correspondantes: ${matches}`;
-        }
+        // progression
+        const percent = Math.round((comScanned/totalCommunes)*100);
+        progressBar.style.width = percent+"%";
+        statusEl.textContent = `Communes: ${comScanned}/${totalCommunes} — Correspondantes: ${matches}`;
       });
       depDone++;
     });
 
-    statusEl.textContent = `Terminé — Communes scannées: ${comScanned}, correspondantes: ${matches}`;
+    statusEl.textContent = `✅ Terminé — Communes scannées: ${comScanned}, correspondantes: ${matches}`;
     btnFrance.disabled = false;
   });
 
