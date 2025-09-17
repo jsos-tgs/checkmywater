@@ -26,7 +26,7 @@ const verbal = {
 };
 
 if (typeof module !== "undefined") {
-  module.exports = verbal; // pour Node.js
+  module.exports = verbal; // Node.js
 } else {
-  window.verbal = verbal; // pour navigateur
+  window.verbal = verbal; // Navigateur
 }
