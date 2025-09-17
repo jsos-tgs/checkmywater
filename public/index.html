@@ -3,40 +3,54 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CheckMyWater – Qualité de l’eau (PFAS)</title>
+  <title>CheckMyWater – France (PFAS élevés)</title>
 
   <!-- Leaflet + MarkerCluster CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
 
-  <!-- Styles -->
   <link rel="stylesheet" href="/styles.css" />
+  <style>
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:#222; }
+    #toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:10px; border-bottom:1px solid #eee; background:#fff; z-index:1000; }
+    .btn{ padding:9px 14px; border:none; border-radius:8px; background:#1677ff; color:#fff; cursor:pointer; }
+    .btn:disabled{ opacity:.6; cursor:default; }
+    #threshold{ width:110px; padding:8px 10px; border:1px solid #ddd; border-radius:8px; }
+    #status{ font-size:13px; opacity:.85; }
+    #map{ height: calc(100vh - 60px); width:100%; }
+    .icon-btn{ margin-left:auto; width:34px; height:34px; line-height:34px; text-align:center; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer; font-weight:700; }
+    .icon-btn[aria-pressed="false"]{ opacity:.7; }
+    .legend{ background: rgba(255,255,255,0.92); padding:10px 12px; border-radius:8px; font-size:13px; line-height:1.5; box-shadow:0 2px 4px rgba(0,0,0,0.2); }
+    .legend .dot{ display:inline-block; width:14px; height:14px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+    .legend .safe{ background:#2e7d32; } .legend .warn{ background:#f9a825; } .legend .risk{ background:#c62828; } .legend .na{ background:#9e9e9e; }
+    .badge{ padding:2px 8px; border-radius:999px; font-size:12px; color:#fff; }
+    .badge.safe{ background:#2e7d32 } .badge.warn{ background:#f9a825; color:#000 } .badge.risk{ background:#c62828 } .badge.na{ background:#9e9e9e }
+  </style>
 </head>
-<div id="toolbar">
-  <strong>💧 CheckMyWater – PFAS</strong>
+<body>
+  <div id="toolbar">
+    <strong>💧 PFAS élevés — France</strong>
 
-  <select id="dept" aria-label="Choisir un département">
-    <option value="">Chargement des départements…</option>
-  </select>
+    <!-- seuil affichage PFAS -->
+    <label for="threshold">Seuil (µg/L)</label>
+    <input id="threshold" type="number" step="0.01" min="0" value="0.10" />
 
-  <button id="loadDept" class="btn" disabled>Charger le département</button>
+    <!-- méthode d’évaluation -->
+    <select id="method" title="Méthode d’évaluation">
+      <option value="sum_first" selected>Somme PFAS si dispo → sinon max</option>
+      <option value="max_only">Max molécule PFAS</option>
+      <option value="strict">Strict : une molécule &gt; seuil</option>
+    </select>
 
-  <!-- Nouvelle précision : méthode d'évaluation -->
-  <label for="method" class="sr-only">Méthode</label>
-  <select id="method" title="Méthode d’évaluation">
-    <option value="sum_first" selected>Somme PFAS si dispo → sinon max</option>
-    <option value="max_only">Max molécule PFAS</option>
-    <option value="strict">Strict : dépassement si une molécule &gt; 0,1</option>
-  </select>
+    <button id="loadFrance" class="btn">Charger la France</button>
+    <span id="status" role="status" aria-live="polite"></span>
 
-  <span id="status" role="status" aria-live="polite"></span>
+    <!-- Légende toggle -->
+    <button id="toggleLegendBtn" class="icon-btn" aria-label="Afficher / masquer la légende" aria-pressed="true">?</button>
+  </div>
 
-  <button id="toggleLegendBtn" class="icon-btn" aria-label="Afficher / masquer la légende" aria-pressed="true">?</button>
-</div>
-
-
-  <div id="map" role="application" aria-label="Carte de la qualité de l’eau (PFAS)"></div>
+  <div id="map" role="application" aria-label="Carte nationale des PFAS élevés"></div>
 
   <!-- Leaflet + MarkerCluster JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
