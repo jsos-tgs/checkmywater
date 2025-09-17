@@ -1,14 +1,15 @@
 {
   "version": 2,
   "builds": [
-    { "src": "server.js", "use": "@vercel/node" },
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "styles.css", "use": "@vercel/static" },
-    { "src": "script.js", "use": "@vercel/static" },
-    { "src": "verbal.js", "use": "@vercel/static" }
+    { "src": "source/server.js", "use": "@vercel/node" },
+    { "src": "public/index.html", "use": "@vercel/static" },
+    { "src": "public/styles.css", "use": "@vercel/static" },
+    { "src": "public/script.js", "use": "@vercel/static" },
+    { "src": "source/verbal.js", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/check/(.*)", "dest": "/server.js" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "src": "/api/check/(.*)", "dest": "source/server.js" },
+    { "src": "/verbal.js", "dest": "source/verbal.js" },
+    { "src": "/(.*)", "dest": "public/index.html" }
   ]
 }
