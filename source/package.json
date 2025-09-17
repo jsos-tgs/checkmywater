@@ -1,15 +1,12 @@
 {
   "name": "checkmywater",
   "version": "1.0.0",
-  "description": "CheckMyWater - Mon Eau 2026 app",
   "type": "module",
-  "main": "server.js",
   "scripts": {
-    "start": "node source/server.js",
-    "build:pfas": "SAMPLE_MODE=${SAMPLE_MODE:-0} CONCURRENCY=${CONCURRENCY:-3} node ../tools/build_pfas_json.mjs"
+    "build:pfas": "node ../tools/build_pfas_real.mjs",
+    "build:pfas:sample": "SAMPLE=1 node ../tools/build_pfas_real.mjs"
   },
   "dependencies": {
-    "express": "^4.18.2",
     "node-fetch": "^3.3.2",
     "p-limit": "^5.0.0"
   }
