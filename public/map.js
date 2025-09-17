@@ -16,53 +16,62 @@ document.addEventListener("DOMContentLoaded", () => {
   const PFAS_REGEX = /(pfas|perfluoro|polyfluoro|fluoroalkyl)/i;
 
   const GEO_DEPTS = `https://geo.api.gouv.fr/departements?fields=code,nom&format=json`;
-  const GEO_COMMUNES = (dept) =>
-    `https://geo.api.gouv.fr/departements/${dept}/communes?fields=code,nom,centre&format=json&geometry=centre`;
-  const HUBEAU_COMMUNE = (insee) =>
+  const GEO_COMMUNES = (dep) =>
+    `https://geo.api.gouv.fr/departements/${dep}/communes?fields=code,nom,centre&format=json&geometry=centre`;
+
+  const HUBEAU_DEP = (dept) =>
     `https://hubeau.eaufrance.fr/api/v1/qualite_eau_potable/resultats_dis` +
-    `?code_commune=${encodeURIComponent(insee)}&size=100&sort=desc` +
-    `&fields=libelle_parametre,parametre,resultat,resultat_numerique,unite,unite_resultat,date_prelevement`;
+    `?code_departement=${dept}&size=10000&fields=code_commune,libelle_parametre,parametre,resultat,resultat_numerique,unite,unite_resultat,date_prelevement`;
 
   async function getJSON(url){
     const res = await fetch(url);
     return res.json();
   }
 
-  function aggregatePFAS(rows){
-    const vals = rows.map(r=>{
-      if (!PFAS_REGEX.test(r.libelle_parametre||r.parametre||"")) return null;
+  // Retourne la valeur max PFAS pour une commune
+  function aggregateByCommune(rows){
+    const communesMap = {};
+    for(const r of rows){
+      if (!PFAS_REGEX.test(r.libelle_parametre||r.parametre||"")) continue;
+      const insee = r.code_commune;
       const v = r.resultat!=null ? Number(r.resultat) : (r.resultat_numerique!=null ? Number(r.resultat_numerique) : NaN);
-      if (Number.isNaN(v)) return null;
-      return { value:v, unit:r.unite||r.unite_resultat||"µg/L", date:r.date_prelevement||"", label:r.libelle_parametre||"" };
-    }).filter(Boolean);
-    if (!vals.length) return null;
-    return vals.reduce((m,x)=> (m && m.value > x.value)?m:x);
+      if(Number.isNaN(v)) continue;
+
+      if(!communesMap[insee] || communesMap[insee].value < v){
+        communesMap[insee] = {
+          code: insee,
+          value: v,
+          unit: r.unite || r.unite_resultat || "µg/L",
+          date: r.date_prelevement || ""
+        };
+      }
+    }
+    return communesMap;
   }
 
   async function loadCommunes(){
     const depts = await getJSON(GEO_DEPTS);
-    let comScanned = 0;
-    let matches = 0;
-    let totalCommunes = 0;
-
-    // compter pour ETA
-    for(const dep of depts){
-      const communes = await getJSON(GEO_COMMUNES(dep.code)) || [];
-      totalCommunes += communes.length;
-    }
-
+    let depDone = 0;
     const start = Date.now();
+    let matches = 0;
 
-    for (const dep of depts){
-      const communes = await getJSON(GEO_COMMUNES(dep.code)) || [];
-      for (const c of communes){
-        if(!c?.centre?.coordinates) continue;
-        const data = await getJSON(HUBEAU_COMMUNE(c.code));
-        const agg = aggregatePFAS(data?.data||[]);
-        comScanned++;
+    for(const dep of depts){
+      // Récupérer d’un coup toutes les communes du département
+      const communesGeo = await getJSON(GEO_COMMUNES(dep.code));
+      const geoMap = {};
+      communesGeo.forEach(c => {
+        if(c.code) geoMap[c.code] = c;
+      });
 
-        if (agg && agg.value > seuil){
+      // Récupérer les analyses PFAS pour ce département
+      const data = await getJSON(HUBEAU_DEP(dep.code));
+      const rows = data?.data || [];
+      const byCommune = aggregateByCommune(rows);
+
+      for(const [code, agg] of Object.entries(byCommune)){
+        if(agg.value > seuil && geoMap[code]){
           matches++;
+          const c = geoMap[code];
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>${c.nom}</td>
@@ -73,27 +82,26 @@ document.addEventListener("DOMContentLoaded", () => {
           row.addEventListener("click", ()=> toggleMap(c, agg));
           tableBody.appendChild(row);
         }
-
-        // progression
-        const percent = Math.round((comScanned/totalCommunes)*100);
-        progressBar.style.width = percent+"%";
-        statusEl.textContent = `Communes analysées : ${comScanned}/${totalCommunes}`;
-        
-        const elapsed = (Date.now() - start)/1000;
-        const rate = comScanned/elapsed; // communes/sec
-        const remaining = (totalCommunes - comScanned)/rate;
-        etaEl.textContent = `Temps estimé restant : ~${Math.ceil(remaining/60)} min`;
       }
+
+      depDone++;
+      const percent = Math.round((depDone/depts.length)*100);
+      progressBar.style.width = percent+"%";
+      statusEl.textContent = `Départements traités : ${depDone}/${depts.length}`;
+
+      const elapsed = (Date.now()-start)/1000;
+      const rate = depDone/elapsed;
+      const remaining = (depts.length-depDone)/rate;
+      etaEl.textContent = `Temps estimé restant : ~${Math.ceil(remaining)} sec`;
     }
 
-    // terminé
-    etaEl.textContent = "";
     statusEl.textContent = `✅ Terminé — ${matches} communes dépassent le seuil`;
+    etaEl.textContent = "";
     resultsSection.style.display = "block";
   }
 
   function toggleMap(c, agg){
-    if(currentCity && currentCity.nom === c.nom){
+    if(currentCity && currentCity.code === c.code){
       mapContainer.style.display = "none";
       if(map){ map.remove(); map = null; }
       currentCity = null;
@@ -105,8 +113,8 @@ document.addEventListener("DOMContentLoaded", () => {
     mapContainer.style.display = "block";
 
     if(map){ map.remove(); }
-
     map = L.map("map").setView([c.centre.coordinates[1], c.centre.coordinates[0]], 13);
+
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors"
     }).addTo(map);
@@ -115,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .bindPopup(`<strong>${c.nom}</strong><br/>PFAS : ${agg.value.toFixed(3)} µg/L`).openPopup();
   }
 
-  // lancement
+  // Lancement
   loadBtn.addEventListener("click", () => {
     loadBtn.disabled = true;
     progressBox.style.display = "block";
