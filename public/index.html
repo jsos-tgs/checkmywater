@@ -13,21 +13,28 @@
   <!-- Styles -->
   <link rel="stylesheet" href="/styles.css" />
 </head>
-<body>
-  <div id="toolbar">
-    <strong>💧 CheckMyWater – PFAS</strong>
+<div id="toolbar">
+  <strong>💧 CheckMyWater – PFAS</strong>
 
-    <select id="dept" aria-label="Choisir un département">
-      <option value="">Chargement des départements…</option>
-    </select>
+  <select id="dept" aria-label="Choisir un département">
+    <option value="">Chargement des départements…</option>
+  </select>
 
-    <button id="loadDept" class="btn" disabled>Charger le département</button>
+  <button id="loadDept" class="btn" disabled>Charger le département</button>
 
-    <span id="status" role="status" aria-live="polite"></span>
+  <!-- Nouvelle précision : méthode d'évaluation -->
+  <label for="method" class="sr-only">Méthode</label>
+  <select id="method" title="Méthode d’évaluation">
+    <option value="sum_first" selected>Somme PFAS si dispo → sinon max</option>
+    <option value="max_only">Max molécule PFAS</option>
+    <option value="strict">Strict : dépassement si une molécule &gt; 0,1</option>
+  </select>
 
-    <!-- Bouton d’aide / légende -->
-    <button id="toggleLegendBtn" class="icon-btn" aria-label="Afficher / masquer la légende" aria-pressed="true">?</button>
-  </div>
+  <span id="status" role="status" aria-live="polite"></span>
+
+  <button id="toggleLegendBtn" class="icon-btn" aria-label="Afficher / masquer la légende" aria-pressed="true">?</button>
+</div>
+
 
   <div id="map" role="application" aria-label="Carte de la qualité de l’eau (PFAS)"></div>
 
